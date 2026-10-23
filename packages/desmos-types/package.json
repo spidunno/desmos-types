@@ -1,0 +1,38 @@
+{
+  "name": "@spidunno/desmos-types",
+  "version": "1.13.2",
+  "description": "TypeScript type definitions for the Desmos API v1.13",
+  "types": "index.d.ts",
+  "publishConfig": {
+    "access": "public"
+  },
+  "exports": {
+    ".": {
+      "types": "./index.d.ts"
+    },
+    "./internals": {
+      "types": "./internals/index.d.ts"
+    }
+  },
+  "files": [
+    "index.d.ts",
+    "types/**/*.d.ts",
+    "internals/**/*.d.ts"
+  ],
+  "scripts": {
+    "test": "tsc -p tsconfig.json && tsc -p tsconfig.internals.json",
+    "generate:internals": "node scripts/extract-internals.cjs"
+  },
+  "keywords": [
+    "desmos",
+    "typescript",
+    "types",
+    "calculator"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "acorn": "^8.14.0",
+    "acorn-walk": "^8.3.4",
+    "jsdom": "^24.1.3"
+  }
+}
