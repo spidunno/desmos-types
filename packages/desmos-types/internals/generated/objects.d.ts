@@ -1120,7 +1120,7 @@ declare namespace Desmos.Internals.Generated {
     graphLineWidth: number;
     guid: string;
     hideCustomColors: boolean;
-    highlight?: unknown;
+    highlight: boolean;
     highlightPropertyMultipliers: Record<string, number[]>;
     includeFunctionParametersInRandomSeed: boolean;
     labelHangingColor: string;

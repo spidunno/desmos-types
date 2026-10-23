@@ -6,11 +6,11 @@ the graphing calculator, geometry tool, 3D calculator, and the four-function and
 ## Install
 
 ```sh
-npm install --save-dev @spidunno/desmos-types@~1.13.2
+npm install --save-dev @spidunno/desmos-types@~1.13.3
 ```
 
 The package's major and minor version match the Desmos API version it describes; patch releases
-are fixes to the types. Use a tilde range (`~1.13.2`), not npm's default caret (`^`), so you only
+are fixes to the types. Use a tilde range (`~1.13.3`), not npm's default caret (`^`), so you only
 get type fixes for the API version you load.
 
 ## Usage
@@ -158,6 +158,14 @@ What's hand-typed:
   `ImageModel` and `TickerModel` as a discriminated union (`ItemModel`), plus `ListModel`.
 - **Actions:** `Action` is the full union. About 25 common actions have checked payloads, and
   `ActionOfType<'set-item-latex'>` picks one.
+- **Graph sketches** (`controller.grapher2d.graphSketches`): one `GraphSketch` per graphed
+  expression, holding `GraphBranch`es as a union over the 20 branch modes the 2D grapher
+  draws (`BranchModes` names them). Each mode's `segments` layout is typed: flat `[x, y, …]`
+  for most curves, `[y, x, …]` for `x = f(y)`, `[θ, r, …]` for polar, `[x, y]` tuples for
+  points, and fixed tuples like `[cx, cy, r]` for geometry objects. Also covered: points of
+  interest (`POI`, `POITypes`), sketch labels, movable points and the grapher's sketch methods.
+  A fixture of 60 real sketches (`test/fixtures/graph-sketches.ts`) is type-checked against
+  these types.
 - **Dispatcher:** `register`, `unregister`, `waitFor`, generic over the action type.
 - **Other controllers:** each math field (`mathField.controller`) and each basic calculator
   (`calculator.controller`) has its own controller and dispatcher. Keystrokes in a math field are
@@ -184,13 +192,116 @@ What's hand-typed:
   `getReconciledExpressionProps`, `currentLanguage`, `manageFocusHelper` / `mathquillFocusHelper`,
   and `List`.
 
+### Graph sketches
+
+`controller.grapher2d.graphSketches` holds what the 2D grapher draws, keyed by expression id. Each
+sketch has `branches`, and each branch has a numeric `branchMode` that tells you what it is and
+how to read its `segments`. One expression often produces several branches: one per list element,
+boundary curves plus a fill for an inequality, an outline plus a fill for a polygon.
+
+The examples below are plain JavaScript, so you can paste them into the browser console. On
+desmos.com the calculator is the global `Calc`; in your own page it's whatever you called
+`Desmos.GraphingCalculator(...)`. desmos.com runs the same v1.13 line, but it is redeployed
+continuously, so an internal field can change before these types are regenerated.
+
+```js
+// Every branch of every sketch, with its mode
+for (const [id, sketch] of Object.entries(Calc.controller.grapher2d.graphSketches)) {
+  console.log(id, sketch.branches.map((b) => b.branchMode));
+}
+```
+
+#### Branch modes
+
+| Mode | Name | Drawn for | `segments` | Other notable fields |
+| ---: | --- | --- | --- | --- |
+| 1 | X | `x = f(y)`, `x` inequalities | flat `[y0, x0, y1, x1, …]` (**y first**) | `operator`, `compiled`, `poi` |
+| 2 | Y | `y = f(x)`, `y` inequalities, distributions, solvable implicit equations | flat `[x0, y0, x1, y1, …]` | `operator`, `compiled`, `poi`, `boundingBox` |
+| 3 | XYPOINT | points, point lists, dot plots | arrays of `[x, y]` | `labels`, `pointSize`, `pointOpacity`, `showLabel` |
+| 4 | XYPOINT_MOVABLE | draggable points | arrays of `[x, y]` | `movablePointInfo` |
+| 5 | PARAMETRIC | parametrics, point-list and table lines, polygon outlines, box plots | flat `[x0, y0, …]` | `compiled`, `tableId` |
+| 6 | POLAR | `r = f(θ)`, polar inequalities | flat `[θ0, r0, θ1, r1, …]` (**polar**) | `sampledDomain` |
+| 7 | POLYGONFILL | inequality shading, polygon and parametric fills, histogram bars | flat `[x0, y0, …]` polygons (empty for inequality shading) | `fillOpacity` |
+| 8 | IMPLICIT | implicit curves | flat `[x0, y0, …]` | `compiled` |
+| 15 | ERROR | an expression that failed while graphing | `[]` | `error` (`{ key, vars }`) |
+| 17 | SEGMENT | `segment` | `[x1, y1, x2, y2]` | `arrowMode` |
+| 18 | LINE | `line` | `[x1, y1, x2, y2]`: two points on the line | `arrowMode` |
+| 19 | RAY | `ray` | `[startX, startY, throughX, throughY]` | `arrowMode` |
+| 20 | CIRCLE | `circle` | `[cx, cy, r]` | |
+| 21 | ARC | `arc` | `[cx, cy, r, startAngle, endAngle]` | |
+| 22 | LABEL | label of a segment, polygon or angle | placement data | `labels` (text), `objectType` (17, 16 or 23) |
+| 23 | ANGLE_MARKER | `angle`, `directedangle` | `[vx, vy, startAngle, angle, directed]` | |
+| 24 | VECTOR | `vector` | `[tailX, tailY, headX, headY]` | `arrowMode` |
+| 25 | COMPLEX_NUMBER | complex numbers in complex mode | arrays of `[re, im]` | like XYPOINT |
+| 26 | COMPLEX_NUMBER_MOVABLE | draggable complex numbers | arrays of `[re, im]` | `movablePointInfo` |
+| 27 | IMAGE | images | `[]` | `dimensions` (`x`, `y`, `width`, `height`, `radianAngle`, `opacity`) |
+
+Modes 17–24 only appear in the geometry tool. Angles are in radians. In each row, `segments` is a
+list of these: a curve broken at discontinuities has several flat arrays, and a list of circles has
+several `[cx, cy, r]` entries. In TypeScript, hovering `branchMode` shows this table, and comparing
+it to a number (`branch.branchMode === 20`) narrows the branch to that mode's type.
+
+#### Points of interest
+
+`sketch.getPOI()` returns the points of interest the grapher shows when an expression is selected.
+`poi.type` is:
+
+| Type | Meaning | Comes from |
+| ---: | --- | --- |
+| 1001 | intersection | `X` / `Y` branches |
+| 1002 | zero (root) | `X` / `Y` branches |
+| 1003 | axis intercept | `X` / `Y` branches |
+| 1004 | extremum | `X` / `Y` branches |
+| 1006 | plotted point without a visible label | point branches |
+| 1008 | labeled point, or a geometry label's anchor | point branches, labels |
+
+#### Examples
+
+```js
+const sketches = Calc.controller.grapher2d.graphSketches;
+
+// Turn any curve branch into a list of {x, y} points, handling the modes
+// whose coordinates aren't (x, y)
+function curvePoints(branch) {
+  const points = [];
+  for (const flat of branch.segments) {
+    for (let i = 0; i < flat.length; i += 2) {
+      const [a, b] = [flat[i], flat[i + 1]];
+      if (branch.branchMode === 1) points.push({ x: b, y: a }); // x = f(y): (y, x)
+      else if (branch.branchMode === 6) points.push({ x: b * Math.cos(a), y: b * Math.sin(a) }); // polar: (θ, r)
+      else points.push({ x: a, y: b });
+    }
+  }
+  return points;
+}
+
+// Circles in the geometry tool
+for (const sketch of Object.values(sketches)) {
+  for (const branch of sketch.branches) {
+    if (branch.branchMode === 20) {
+      for (const [cx, cy, r] of branch.segments) console.log(`circle at (${cx}, ${cy}), radius ${r}`);
+    }
+  }
+}
+
+// Extrema of the expression with id "1"
+sketches['1']?.getPOI().filter((poi) => poi.type === 1004).map((poi) => [poi.x, poi.y]);
+
+// Draggable points, with table row info for table columns
+sketches['1']?.getMovablePoints().map((p) => ({ x: p.x, y: p.y, row: p.tableInfo?.rowIndex }));
+```
+
 ### Regenerating for a new bundle
 
 ```sh
 curl -o calculator.js "https://www.desmos.com/api/v1.13/calculator.js?apiKey=YOUR_API_KEY"
 npm run generate:internals -- calculator.js
+npm run snapshot:sketches -- calculator.js
 npm test
 ```
+
+`snapshot:sketches` re-renders real graph sketches into `test/fixtures/graph-sketches.ts`. If a
+branch shape changed, `npm test` reports which field of which branch mode no longer matches.
 
 The generator executes the bundle inside jsdom, so only run it on a bundle from desmos.com.
 If `npm test` fails afterwards, the bundle changed in a way that contradicts a hand-written type.

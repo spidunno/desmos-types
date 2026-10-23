@@ -30,7 +30,7 @@ const fs = require('fs');
 const path = require('path');
 const acorn = require('acorn');
 const walk = require('acorn-walk');
-const { JSDOM } = require('jsdom');
+const { loadDesmos } = require('./lib/jsdom-desmos.cjs');
 
 const bundlePath = process.argv[2];
 if (!bundlePath) {
@@ -43,66 +43,6 @@ const source = fs.readFileSync(bundlePath, 'utf8');
 // ---------------------------------------------------------------------------
 // Load the bundle
 // ---------------------------------------------------------------------------
-
-function loadDesmos() {
-  const dom = new JSDOM('<!doctype html><div id="calc" style="width:800px;height:600px"></div>', {
-    runScripts: 'outside-only',
-    pretendToBeVisual: true,
-  });
-  const w = dom.window;
-  // APIs the bundle expects that jsdom doesn't provide.
-  w.structuredClone = structuredClone;
-  w.ResizeObserver = class {
-    observe() {}
-    unobserve() {}
-    disconnect() {}
-  };
-  w.matchMedia = () => ({
-    matches: false,
-    addListener() {},
-    removeListener() {},
-    addEventListener() {},
-    removeEventListener() {},
-  });
-  w.HTMLCanvasElement.prototype.getContext = function () {
-    const canvas = this;
-    return new Proxy(
-      {},
-      {
-        get: (_t, k) =>
-          k === 'canvas'
-            ? canvas
-            : k === 'measureText'
-              ? () => ({ width: 1 })
-              : k === 'getImageData' || k === 'createImageData'
-                ? () => ({ data: new Uint8ClampedArray(4), width: 1, height: 1 })
-                : typeof k === 'string'
-                  ? () => {}
-                  : undefined,
-        set: () => true,
-      }
-    );
-  };
-  // jsdom has no layout. Give every element a size so the expressions list
-  // believes it is visible and renders its item views.
-  for (const [prop, value] of [
-    ['offsetWidth', 1000],
-    ['offsetHeight', 700],
-    ['clientWidth', 1000],
-    ['clientHeight', 700],
-    ['scrollWidth', 1000],
-    ['scrollHeight', 700],
-  ]) {
-    Object.defineProperty(w.HTMLElement.prototype, prop, { configurable: true, get: () => value });
-  }
-  w.Element.prototype.getBoundingClientRect = () => ({
-    x: 0, y: 0, top: 0, left: 0, right: 1000, bottom: 700, width: 1000, height: 700, toJSON() {},
-  });
-  w.console.warn = () => {};
-  w.console.error = () => {};
-  w.eval(source);
-  return w;
-}
 
 /** Record every DCGView constructed from now on. */
 function recordViews(D) {
@@ -927,7 +867,7 @@ function header(title) {
   ].join('\n');
 }
 
-const loaded = loadDesmos();
+const loaded = loadDesmos(source);
 const D = loaded.Desmos;
 const views = recordViews(D);
 const calc = D.GraphingCalculator(loaded.document.getElementById('calc'), { authorFeatures: true });

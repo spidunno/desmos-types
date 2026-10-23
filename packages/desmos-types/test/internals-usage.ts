@@ -206,6 +206,87 @@ ctl.dispatch({ type: 'main' });
 // @ts-expect-error graph actions don't go to a math field
 field.controller.dispatch({ type: 'set-item-latex', id: 'a', latex: 'x' });
 
+// --- Graph sketches --------------------------------------------------------
+
+const g2d = ctl.grapher2d;
+for (const [id, sketch] of Object.entries(g2d.graphSketches)) {
+  for (const branch of sketch.branches) {
+    switch (branch.branchMode) {
+      case 1: {
+        // X functions store (y, x) pairs.
+        const [y0, x0] = branch.segments[0];
+        break;
+      }
+      case 2:
+      case 5:
+      case 8: {
+        const flat: number[] = branch.segments[0];
+        const op: Desmos.Internals.GraphOperator | undefined = branch.operator;
+        const fn = branch.compiled?.fn;
+        break;
+      }
+      case 6: {
+        const [theta0, r0] = branch.segments[0];
+        const thetaMax: number | undefined = branch.sampledDomain?.max;
+        break;
+      }
+      case 3:
+      case 25: {
+        const [x, y] = branch.segments[0][0];
+        const size: number | number[] | undefined = branch.pointSize;
+        const label: string | undefined = branch.labels?.[0];
+        break;
+      }
+      case 4:
+      case 26: {
+        const { dragX, dragY } = branch.movablePointInfo[0];
+        break;
+      }
+      case 20: {
+        const [cx, cy, radius] = branch.segments[0];
+        break;
+      }
+      case 21: {
+        const [cx, cy, r, start, end] = branch.segments[0];
+        break;
+      }
+      case 23: {
+        const [vx, vy, start, angle, directed] = branch.segments[0];
+        const isDirected: boolean = directed === 1;
+        break;
+      }
+      case 22: {
+        const text: string = branch.labels[0];
+        const labeled: 16 | 17 | 23 = branch.objectType;
+        break;
+      }
+      case 15: {
+        const message: string = branch.error.key;
+        break;
+      }
+      case 27: {
+        const width: number = branch.dimensions.width[0];
+        break;
+      }
+    }
+  }
+  for (const poi of sketch.getPOI()) {
+    if (poi.type === 1004) console.log(`extremum of ${id} at`, poi.x, poi.y, poi.getGraphMode());
+  }
+  const dragPoint = sketch.getMovablePoints()[0];
+  if (dragPoint) console.log(dragPoint.x, dragPoint.tableInfo?.rowIndex);
+}
+
+const circle: Desmos.Internals.BranchOfMode<Desmos.Internals.BranchModes['CIRCLE']> | undefined = g2d
+  .getGraphSketch('c')
+  ?.branches.find((b): b is Desmos.Internals.CircleBranch => b.branchMode === 20);
+
+// @ts-expect-error circle segments are [cx, cy, r]: there is no fourth element
+const [, , , tooMany] = (circle as Desmos.Internals.CircleBranch).segments[0];
+
+// @ts-expect-error `segments` meaning differs by mode, so it must be narrowed first
+const unnarrowed: number[] = g2d.graphSketches.x.branches[0].segments[0];
+
 // --- Errors ----------------------------------------------------------------
 
 // @ts-expect-error unknown action type
