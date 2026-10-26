@@ -366,10 +366,36 @@ g.events.unobserveEvent('.myMod');
 Moving the viewport this way doesn't add an undo step. Call
 `g.debounceUserRequestedViewportChange()` afterwards if you want one.
 
+### Which Desmos build a version matches
+
+Desmos updates the v1.13 bundle without changing its version, so the internal types are
+regenerated automatically whenever `Desmos.commit` changes, and each regeneration is published as a
+new patch version. The `desmos` field in `package.json` records the commit a version was generated
+from, and [CHANGELOG.md](CHANGELOG.md) lists every version's commit and what changed in the
+internals:
+
+```sh
+npm view @spidunno/desmos-types@1.13.9 desmos   # { version: 'v1.13-prerelease', commit: '…' }
+```
+
+```js
+// is the live bundle the one the installed types were generated from?
+console.log(Desmos.commit);
+```
+
 ### Regenerating for a new bundle
 
 ```sh
 curl -o calculator.js "https://www.desmos.com/api/v1.13/calculator.js?apiKey=YOUR_API_KEY"
+npm run update:bundle -- calculator.js
+```
+
+`update:bundle` does the whole update: it reads the bundle's commit (stopping if it's the one in
+`package.json`, unless you pass `--force`), runs both generators, runs `npm test`, bumps the patch
+version, records the commit and adds a CHANGELOG entry. It doesn't commit or publish. The
+generators can also be run on their own:
+
+```sh
 npm run generate:internals -- calculator.js
 npm run snapshot:sketches -- calculator.js
 npm test

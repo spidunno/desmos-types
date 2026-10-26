@@ -43,3 +43,29 @@ Plain `npm publish` at the root doesn't work: the root package is private.
 
 `npm run test:runtime -w @spidunno/desmos-loader -- path/to/calculator.js` checks that the loader's
 transform runs a real bundle in jsdom without creating globals.
+
+## Automatic releases
+
+[`.github/workflows/release.yml`](.github/workflows/release.yml) does two things:
+
+- **Every hour** (or when run by hand from the Actions tab), it downloads the v1.13 `calculator.js`
+  and runs `npm run update:bundle` on it. When `Desmos.commit` has changed, it regenerates the
+  internal types and runs the tests:
+  - If they pass, it commits a new patch version of `@spidunno/desmos-types` to `master` and
+    publishes it.
+  - If they fail, it opens a pull request (branch `desmos/<commit>`) with the regenerated types
+    and the compiler errors, and publishes nothing. Fix the hand-written types on that branch and
+    merge it.
+- **On every push to `master`**, it runs the tests and `npm run release`, so anything whose
+  version isn't on npm yet is published. That covers merged update pull requests and versions
+  bumped by hand.
+
+It needs, once:
+
+1. **A `DESMOS_API_KEY` secret** (Settings → Secrets and variables → Actions → New repository
+   secret).
+2. **Pull requests from Actions allowed** (Settings → Actions → General → Workflow permissions:
+   "Read and write permissions" and "Allow GitHub Actions to create and approve pull requests").
+3. **A trusted publisher on npm for each package** (on npmjs.com, the package's Settings →
+   Trusted Publisher → GitHub Actions): owner `spidunno`, repository `desmos-types`, workflow
+   `release.yml`. No npm token is stored anywhere.

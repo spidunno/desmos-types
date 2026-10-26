@@ -31,7 +31,9 @@
     "build:module": "node scripts/build-module-types.cjs",
     "prepack": "npm run build:module",
     "generate:internals": "node scripts/extract-internals.cjs",
-    "snapshot:sketches": "node scripts/snapshot-sketches.cjs"
+    "snapshot:sketches": "node scripts/snapshot-sketches.cjs",
+    "bundle-info": "node scripts/bundle-info.cjs",
+    "update:bundle": "node scripts/update-bundle.mjs"
   },
   "keywords": [
     "desmos",
@@ -44,5 +46,9 @@
     "acorn": "^8.14.0",
     "acorn-walk": "^8.3.4",
     "jsdom": "^24.1.3"
+  },
+  "desmos": {
+    "version": "v1.13-prerelease",
+    "commit": "c2616b6762c586165f75e322fbc6c7b6ab56b394"
   }
 }

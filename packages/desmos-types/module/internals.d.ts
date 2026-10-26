@@ -7347,6 +7347,19 @@ declare namespace Desmos.Internals {
     redrawToCtx(context: DrawContext, scaleAxis?: 'x' | 'y' | 'both'): void;
     drawCartesianGrid(ctx: CanvasRenderingContext2D, projection: Projection, steps: GridSteps, logGrid?: LogGrid): void;
     drawPolarGrid(ctx: CanvasRenderingContext2D, projection: Projection, steps: { majorStepR: number; minorStepR: number }): void;
+    /**
+     * Draw the numbers at every major step (each one a `strokeText` shadow
+     * then a `fillText`), plus tick marks on the axes when `drawTickMarks`
+     * (the grid is hidden). Returns the strips along each axis that the
+     * numbers cover, which `drawLabels` keeps the axis labels out of.
+     */
+    drawCartesianStepNumbers(
+      ctx: CanvasRenderingContext2D,
+      projection: Projection,
+      steps: GridSteps,
+      drawTickMarks: boolean,
+      logGrid?: LogGrid,
+    ): { x: PixelRect; y: PixelRect };
   }
 
   /**

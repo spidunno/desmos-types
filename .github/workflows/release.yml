@@ -1,0 +1,135 @@
+# Tracks the Desmos API bundle and publishes the packages.
+#
+# - Every hour (and on demand), downloads the v1.13 calculator.js and checks
+#   its Desmos.commit. When it changes, regenerates the internal types and runs
+#   the tests. If they pass, commits a new patch version to master and
+#   publishes it. If they fail, opens a pull request with the regenerated types
+#   and the errors instead, for the hand-written types to be fixed.
+# - On every push to master, publishes any package whose version isn't on npm
+#   yet (so merging one of those pull requests, or bumping a version by hand,
+#   publishes it).
+#
+# Setup is in README.md under "Automatic releases".
+
+name: Release
+
+on:
+  schedule:
+    - cron: '23 * * * *'
+  workflow_dispatch:
+    inputs:
+      force:
+        description: Regenerate and release even if the Desmos commit hasn't changed
+        type: boolean
+        default: false
+  push:
+    branches: [master]
+
+permissions:
+  contents: write # commit regenerated types, push branches
+  pull-requests: write # open a pull request when the tests fail
+  id-token: write # npm trusted publishing
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  update:
+    if: github.event_name != 'push'
+    runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.update.outputs.changed }}
+      tests: ${{ steps.update.outputs.tests }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      - name: Download calculator.js
+        env:
+          DESMOS_API_KEY: ${{ secrets.DESMOS_API_KEY }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/desmos"
+          curl -fsSL --retry 3 \
+            "https://www.desmos.com/api/v1.13/calculator.js?apiKey=$DESMOS_API_KEY" \
+            -o "$RUNNER_TEMP/desmos/calculator.js"
+
+      - name: Regenerate the internal types
+        id: update
+        run: >-
+          npm run update:bundle -w @spidunno/desmos-types --
+          "$RUNNER_TEMP/desmos/calculator.js"
+          --summary "$RUNNER_TEMP/summary.md"
+          ${{ inputs.force && '--force' || '' }}
+
+      - name: Show the summary
+        if: steps.update.outputs.changed == 'true'
+        run: cat "$RUNNER_TEMP/summary.md" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Set the commit author
+        if: steps.update.outputs.changed == 'true'
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+
+      - name: Commit to master
+        if: steps.update.outputs.changed == 'true' && steps.update.outputs.tests == 'pass'
+        run: |
+          git add packages/desmos-types package-lock.json
+          git commit -m "Regenerate internals for Desmos commit ${{ steps.update.outputs.short }}" \
+            -m "@spidunno/desmos-types@${{ steps.update.outputs.version }}"
+          git push origin HEAD:master
+
+      - name: Open a pull request
+        if: steps.update.outputs.changed == 'true' && steps.update.outputs.tests == 'fail'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          branch="desmos/${{ steps.update.outputs.short }}"
+          if git ls-remote --exit-code --heads origin "$branch" > /dev/null; then
+            echo "A pull request for this commit is already open ($branch)."
+            exit 0
+          fi
+          git switch -c "$branch"
+          git add packages/desmos-types package-lock.json
+          git commit -m "Regenerate internals for Desmos commit ${{ steps.update.outputs.short }}" \
+            -m "The hand-written types need updating; see the pull request."
+          git push origin "$branch"
+          gh pr create --base master --head "$branch" \
+            --title "Desmos commit ${{ steps.update.outputs.short }}: hand-written types need updating" \
+            --body-file "$RUNNER_TEMP/summary.md"
+
+  publish:
+    needs: update
+    # after a push, or after `update` committed a new version
+    if: >-
+      always() && (github.event_name == 'push' ||
+      (needs.update.result == 'success' && needs.update.outputs.changed == 'true' && needs.update.outputs.tests == 'pass'))
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # includes the commit `update` just pushed
+          ref: master
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          registry-url: https://registry.npmjs.org
+
+      # trusted publishing needs npm 11.5.1 or later
+      - run: npm install -g npm@latest
+
+      - run: npm ci
+
+      - run: npm test -w @spidunno/desmos-types -w @spidunno/desmos-loader
+
+      - name: Publish new versions
+        run: npm run release
