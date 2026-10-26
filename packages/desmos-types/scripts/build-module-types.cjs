@@ -11,7 +11,10 @@
  *
  * `Desmos` is exported with `export type`: the package has no JavaScript, so
  * a value import would fail at runtime. With a type-only export, using it as
- * a value is a compile error, and auto-imports write `import type`.
+ * a value is a compile error, and auto-imports write `import type`. The same
+ * namespace is also exported as a value under a name nobody types by accident,
+ * `DesmosForLoaders`, for packages that supply the runtime value and re-export
+ * it (like @spidunno/desmos-loader).
  *
  *   node scripts/build-module-types.cjs
  */
@@ -66,6 +69,14 @@ function build(entry, outName, description) {
     ...parts,
     '',
     'export type { Desmos };',
+    '',
+    '/**',
+    ' * The same namespace, exported as a value as well. This package has no',
+    ' * JavaScript, so importing this from here fails at runtime: it exists for',
+    ' * packages that supply the value themselves and re-export it as `Desmos`,',
+    ' * like @spidunno/desmos-loader.',
+    ' */',
+    'export { Desmos as DesmosForLoaders };',
     '',
   ].join('\n');
   fs.mkdirSync(OUT_DIR, { recursive: true });

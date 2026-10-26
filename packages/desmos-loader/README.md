@@ -11,15 +11,17 @@ events and focus work as usual, and you can style it like any other element.
 ## Install
 
 ```sh
-npm install @spidunno/desmos-loader@~1.13.1
+npm install @spidunno/desmos-loader@~1.13.2
 ```
 
 The version's major.minor is the Desmos API version it loads (`1.13.x` loads v1.13). The patch
 number is for fixes to this package. A tilde range keeps you on v1.13.
 
-The types are included: they come from
-[`@spidunno/desmos-types`](https://www.npmjs.com/package/@spidunno/desmos-types), copied in at build
-time, so you don't need to install that package.
+The types come from
+[`@spidunno/desmos-types`](https://www.npmjs.com/package/@spidunno/desmos-types), which is installed
+as a dependency, so you don't need to install it yourself. It's a tilde range, so updating your
+dependencies picks up new types (including internals regenerated for each Desmos build) without a
+new loader release.
 
 ## Recommended usage
 

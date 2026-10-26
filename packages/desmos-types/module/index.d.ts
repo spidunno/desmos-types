@@ -2099,3 +2099,11 @@ declare namespace Desmos {
 }
 
 export type { Desmos };
+
+/**
+ * The same namespace, exported as a value as well. This package has no
+ * JavaScript, so importing this from here fails at runtime: it exists for
+ * packages that supply the value themselves and re-export it as `Desmos`,
+ * like @spidunno/desmos-loader.
+ */
+export { Desmos as DesmosForLoaders };
