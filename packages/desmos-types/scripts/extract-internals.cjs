@@ -9,10 +9,11 @@
  *
  *  1. Runtime inspection: the bundle is loaded in jsdom, a calculator is
  *     created with one item of every type, and selected internal objects
- *     are walked. Property types come from their observed values; method
- *     return types come from static analysis of each method's source, and
- *     from calling side-effect-free getters (`get*`, `is*`, ...) with no
- *     arguments.
+ *     are walked. Property types come from their observed values. Method
+ *     return types come from calling side-effect-free getters (`get*`,
+ *     `is*`, ...) with no arguments, or from what the method returns
+ *     (lib/return-inference.cjs). Parameter names and types are inferred
+ *     from how each method uses them (lib/param-inference.cjs).
  *  2. Static analysis of the bundle with acorn: every `dispatch({ type })`
  *     call site and every `switch (action.type)` reducer is scanned to
  *     build the union of dispatchable actions and their payload fields.
@@ -31,6 +32,8 @@ const path = require('path');
 const acorn = require('acorn');
 const walk = require('acorn-walk');
 const { loadDesmos } = require('./lib/jsdom-desmos.cjs');
+const { ParamInference } = require('./lib/param-inference.cjs');
+const { ReturnInference } = require('./lib/return-inference.cjs');
 
 const bundlePath = process.argv[2];
 if (!bundlePath) {
@@ -202,7 +205,6 @@ const PROBE_NAME = /^(get|is|has|can|should|any|are|needs|supports|was|will)[A-Z
  */
 const PROBE_DENY =
   /^(getBlankState|getHistory|getState|getScreenshot|getSnapshot|getGrapher|getGrapher2d|getGrapher3d|getRootElt|getExpressionAnalysis|getViewState|getHelperExpressions|getSelectedExpressionIds|getProduct)$/;
-const BOOLEAN_NAME = /^(is|has|can|should|are|needs|supports|was|will)[A-Z]/;
 /** Property names whose plain-object values are lookup tables, not records. */
 const DICTIONARY_NAME = /(IdTo\w+|ById|Map|ToModel|Lookup|Cache|ByName|Subscriptions|subscriptions|Callbacks|_callbacks|Colors|^colors|Analysis|analysis)$/;
 /** Ids of the scenario's items; objects keyed by these are lookup tables. */
@@ -224,6 +226,8 @@ class Generator {
     this.names = new Map();
     /** [name, object, options] in emission order */
     this.roots = [];
+    /** object -> own keys it had before the UI steps (see snapshotKeys) */
+    this.initialKeys = new WeakMap();
   }
 
   /**
@@ -316,6 +320,15 @@ class Generator {
     return Array.from({ length: fn.length }, (_, i) => `arg${i}?: ${paramType}`).join(', ');
   }
 
+  /** Parameters of method `name` of `obj`, with inferred names and types where possible. */
+  methodParams(obj, name, fn) {
+    const inferred = this.paramInference && this.paramInference.infer(obj, name, fn);
+    if (!inferred) return this.params(fn);
+    return inferred
+      .map((p) => (p.rest ? `...${p.name}: ${p.type}` : `${p.name}${p.optional ? '?' : ''}: ${p.type}`))
+      .join(', ');
+  }
+
   methodReturn(obj, name, fn) {
     if (fn.length === 0 && PROBE_NAME.test(name) && !PROBE_DENY.test(name)) {
       try {
@@ -326,9 +339,11 @@ class Generator {
         }
       } catch {}
     }
+    // PROBE_DENY methods return scenario-dependent values, which `this["x"]` types would hide.
+    const inferred = !PROBE_DENY.test(name) && this.returnInference && this.returnInference.methodReturn(obj, name, fn);
+    if (inferred) return inferred;
     const s = staticReturnType(fn);
     if (s) return s;
-    if (BOOLEAN_NAME.test(name)) return 'boolean';
     return 'unknown';
   }
 
@@ -344,9 +359,11 @@ class Generator {
         continue;
       }
       if (typeof v === 'function' && !this.names.has(v)) {
-        lines.push(`    ${key(k)}(${this.params(v)}): ${this.methodReturn(obj, k, v)};`);
+        lines.push(`    ${key(k)}(${this.methodParams(obj, k, v)}): ${this.methodReturn(obj, k, v)};`);
       } else {
-        lines.push(`    ${key(k)}${v === undefined ? '?' : ''}: ${this.typeOf(v, 0, k)};`);
+        const initial = this.initialKeys.get(obj);
+        const optional = v === undefined || (initial !== undefined && !initial.has(k));
+        lines.push(`    ${key(k)}${optional ? '?' : ''}: ${this.typeOf(v, 0, k)};`);
       }
     }
     // Prototype members, nearest first, skipping shadowed names.
@@ -364,7 +381,7 @@ class Generator {
           } catch {}
           lines.push(`    ${d.set ? '' : 'readonly '}${key(k)}: ${this.typeOf(v)};`);
         } else if (typeof d.value === 'function') {
-          lines.push(`    ${key(k)}(${this.params(d.value)}): ${this.methodReturn(obj, k, d.value)};`);
+          lines.push(`    ${key(k)}(${this.methodParams(obj, k, d.value)}): ${this.methodReturn(obj, k, d.value)};`);
         }
       }
       proto = Object.getPrototypeOf(proto);
@@ -414,12 +431,17 @@ function fieldType(name, observedKinds) {
  */
 function parseBundle() {
   const main = acorn.parse(source, { ecmaVersion: 'latest', sourceType: 'script' });
+  main.sourceText = source;
   const asts = [main];
   walk.full(main, (n) => {
     if (n.type !== 'VariableDeclarator' || !n.id.name || !/^__dcg_\w+_source__$/.test(n.id.name)) return;
     if (!n.init || n.init.type !== 'Literal' || typeof n.init.value !== 'string') return;
     try {
-      asts.push(acorn.parse(n.init.value, { ecmaVersion: 'latest', sourceType: 'script' }));
+      const ast = acorn.parse(n.init.value, { ecmaVersion: 'latest', sourceType: 'script' });
+      ast.sourceText = n.init.value;
+      asts.push(ast);
+      // Text inside this string belongs to the embedded module, not to the main bundle.
+      (main.embeddedRanges ||= []).push([n.init.start, n.init.end]);
     } catch {}
   });
   return asts;
@@ -815,8 +837,11 @@ function extractActions(asts) {
     });
 
   const byDomain = Object.fromEntries(ACTION_DOMAINS.map((d) => [d.name, []]));
+  /** action type -> field -> TS type, for naming method parameters */
+  const fieldTypes = new Map();
   for (const [type, a] of [...actions].sort(([x], [y]) => (x < y ? -1 : 1))) {
     const fields = [];
+    fieldTypes.set(type, new Map());
     const names = new Set([...a.fields.keys(), ...a.read]);
     for (const f of [...names].sort()) {
       const info = a.fields.get(f);
@@ -827,6 +852,7 @@ function extractActions(asts) {
           ? [...info.literals].sort().map((l) => JSON.stringify(l)).join(' | ')
           : fieldType(f, kinds);
       fields.push(`${key(f)}${required ? '' : '?'}: ${t}`);
+      fieldTypes.get(type).set(f, t);
     }
     const doc = [];
     if (a.sites === 0) doc.push('Handled but never dispatched inside the bundle.');
@@ -849,7 +875,7 @@ function extractActions(asts) {
     )
     .join('\n\n');
   const counts = Object.entries(byDomain).map(([k, v]) => `${v.length} ${k}`).join(', ');
-  return { count: actions.size, counts, text };
+  return { count: actions.size, counts, text, fieldTypes };
 }
 
 // ---------------------------------------------------------------------------
@@ -872,6 +898,25 @@ const D = loaded.Desmos;
 const views = recordViews(D);
 const calc = D.GraphingCalculator(loaded.document.getElementById('calc'), { authorFeatures: true });
 calc.setState(SCENARIO_STATE);
+const initialKeys = snapshotKeys([calc, calc._calc, calc.controller], 3);
+
+/**
+ * Record the own keys of class instances reachable from `roots`. Keys added
+ * later (by the UI steps or the first animation frame) are set lazily, so
+ * they are emitted as optional.
+ */
+function snapshotKeys(roots, depth) {
+  const result = new WeakMap();
+  const visit = (obj, d) => {
+    if (!obj || typeof obj !== 'object' || result.has(obj) || loaded.Node && obj instanceof loaded.Node) return;
+    const proto = Object.getPrototypeOf(obj);
+    if (!proto || proto === loaded.Object.prototype || proto === Object.prototype || Array.isArray(obj)) return;
+    result.set(obj, new Set(Object.keys(obj)));
+    if (d > 0) for (const k of Object.keys(obj)) visit(obj[k], d - 1);
+  };
+  for (const r of roots) visit(r, depth);
+  return result;
+}
 
 /**
  * Interact with the UI so that more views render (menus, focused math
@@ -916,7 +961,11 @@ function run() {
   const ctl = calc.controller;
   const gen = new Generator(loaded);
   gen.controller = ctl;
+  gen.initialKeys = initialKeys;
   const asts = parseBundle();
+  const actions = extractActions(asts);
+  gen.paramInference = new ParamInference({ asts, actionFields: actions.fieldTypes });
+  gen.returnInference = new ReturnInference({ params: gen.paramInference, typeOfValue: (v) => gen.typeOf(v) });
 
   // Named roots first so that references between them resolve by name.
   gen.addRoot('Controller', ctl);
@@ -971,7 +1020,6 @@ function run() {
     `${header('Props and instance members of the views on Private.Fragile.')}declare namespace Desmos.Internals.Generated {\n${viewTypes}\n}\n`
   );
 
-  const actions = extractActions(asts);
   fs.writeFileSync(
     path.join(OUT_DIR, 'actions.d.ts'),
     `${header('Actions accepted by each dispatch domain, from static analysis.')}declare namespace Desmos.Internals.Generated {\n${actions.text}\n}\n`

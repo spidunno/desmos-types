@@ -73,7 +73,7 @@ declare namespace Desmos.Internals.Generated {
     btnViews: { default: HTMLDivElement; large: HTMLDivElement };
     config: Array<{ key: string; label: () => unknown; ariaLabel: () => unknown; class: () => unknown; selected: () => boolean; onSelect: () => unknown; focusHelperOptions: Record<string, unknown> } | { key: string; label: () => unknown; ariaLabel: () => unknown; class: () => unknown; selected: () => unknown; onSelect: () => unknown; focusHelperOptions: Record<string, unknown> }>;
     getAriaLabel(arg0?: unknown): unknown;
-    getTabIndexForOption(arg0?: unknown): unknown;
+    getTabIndexForOption(arg0?: unknown): number;
     getTheme(): string;
     handleRadioKeydown(arg0?: unknown): void;
     isDisabled(): boolean;
@@ -297,7 +297,7 @@ declare namespace Desmos.Internals.Generated {
     getFormulaAria(): string;
     getLabelOptions(): { smallCutoff: number; bigCutoff: number; digits: number; displayAsFraction: boolean };
     getMathFieldFocusHelper(): { shouldBeFocused: () => unknown; onFocusedChanged: (arg0?: any, arg1?: any) => void };
-    handleEditableMathquillPressedKey(arg0?: unknown, arg1?: unknown): unknown;
+    handleEditableMathquillPressedKey(arg0?: unknown, arg1?: unknown): void;
     handleLatexChanged(arg0?: unknown): void;
     handlePressedKey(arg0?: unknown): void;
     hasDomain(): boolean;
@@ -307,7 +307,7 @@ declare namespace Desmos.Internals.Generated {
     isMovingToInlineMathInput(arg0?: unknown): boolean;
     isReadonly(): boolean;
     shouldShowLabelView(): boolean;
-    showCostEstimate(): unknown;
+    showCostEstimate(): boolean | undefined;
     template(): DCGView.ElementSpec;
     willUnmount(): void;
     exitEditListMode(): void;
@@ -376,9 +376,9 @@ declare namespace Desmos.Internals.Generated {
     isFraction(): boolean;
     isNonemptyAction(): boolean;
     isToneExpression(): boolean;
-    myOptionsOpen(): unknown;
+    myOptionsOpen(): boolean | undefined;
     onToggleFractionDisplay(): void;
-    renderAsSelected(): unknown;
+    renderAsSelected(): boolean;
     template(): DCGView.ElementSpec;
     toggleGraphShown(): void;
     toggleOptions(arg0?: unknown): void;
@@ -429,8 +429,8 @@ declare namespace Desmos.Internals.Generated {
     suspendedFooters: Record<string, unknown>;
     getFooterClass(): () => unknown;
     getFooterComponents(): string[];
-    hasFooterComponent(arg0?: unknown): boolean;
-    id(): unknown;
+    hasFooterComponent(arg0?: unknown): unknown;
+    id(): string;
     init(): void;
     isFooterSuspended(arg0?: unknown): boolean;
     template(): DCGView.ElementSpec;

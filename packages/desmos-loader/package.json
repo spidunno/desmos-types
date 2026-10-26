@@ -1,0 +1,40 @@
+{
+  "name": "@spidunno/desmos-loader",
+  "version": "1.13.1",
+  "description": "Load the Desmos API v1.13 without creating globals, with types",
+  "type": "module",
+  "publishConfig": {
+    "access": "public"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./internals": {
+      "types": "./dist/internals.d.ts",
+      "default": "./dist/internals.js"
+    }
+  },
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsc -p tsconfig.json && node scripts/build.cjs",
+    "prepack": "npm run build",
+    "test": "npm run build && tsc -p tsconfig.test.json",
+    "test:runtime": "node test/runtime.cjs"
+  },
+  "keywords": [
+    "desmos",
+    "calculator",
+    "loader"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "@spidunno/desmos-types": "~1.13.7",
+    "jsdom": "^24.1.3"
+  }
+}

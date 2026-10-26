@@ -18,6 +18,7 @@
 /// <reference path="./actions.d.ts" />
 /// <reference path="./dispatcher.d.ts" />
 /// <reference path="./graph-sketches.d.ts" />
+/// <reference path="./grapher2d.d.ts" />
 /// <reference path="./controller.d.ts" />
 /// <reference path="./sub-controllers.d.ts" />
 /// <reference path="./dcgview.d.ts" />

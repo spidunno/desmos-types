@@ -28,6 +28,12 @@ const viaAlias: Desmos.GraphingCalculator = Desmos.Calculator(elt);
 const isCalc: boolean = viaNew instanceof Desmos.GraphingCalculator;
 const fromWindow: Desmos.GraphingCalculator = window.Desmos.GraphingCalculator(elt);
 
+// Undocumented, internal and deprecated options are accepted too.
+const complexCalc = Desmos.GraphingCalculator(elt, { complex: true, allowComplex: true, restrictGridToFirstQuadrant: true });
+complexCalc.updateSettings({ advancedStyling: true, transparentBackground: true, product: 'graphing', menus: false });
+const isComplex: boolean = complexCalc.settings.complex;
+const authorMode: boolean = complexCalc.settings.authorMode;
+
 // --- Expressions ---------------------------------------------------------
 
 calculator.setExpression({ id: 'm', latex: 'm=2' });

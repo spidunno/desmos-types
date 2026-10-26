@@ -225,7 +225,63 @@ declare namespace Desmos.Internals {
     controller: Controller;
   }
 
-  interface Grapher3D extends Generated.Grapher3D {}
+  /** A point in 3D math coordinates. */
+  interface Point3D {
+    x: number;
+    y: number;
+    z: number;
+  }
+
+  /** What the 3D grapher's worker found under the mouse. */
+  interface PickResult3D {
+    /** Where the ray from the mouse hit, in math coordinates. */
+    point: Point3D;
+  }
+
+  /** `grapher3d.controls`: mouse, touch and keyboard handling for the 3D graph paper. */
+  interface Grapher3DControls {
+    grapher3d: Grapher3D;
+    /** The graph paper element (`grapher3d.elt`). Desmos's wheel handler is attached here. */
+    domElement: HTMLElement;
+    /** -1 when idle, 0 while rotating with the mouse. */
+    state: -1 | 0;
+    /** Rotation speed while the graph is spinning, 0 when it isn't. */
+    speed3D: number;
+    /**
+     * `performance.now()` of the last wheel zoom, or 0. The tick calls
+     * `grapher3d.endZoom()` and resets it 100ms after the last one.
+     */
+    lastWheelEventTime: number;
+    /** Whether zoom and pan are disabled. */
+    isLocked(): boolean;
+    /** Whether rotating is disabled (the user lock, or the page is pinch zoomed). */
+    isRotationLocked(): boolean;
+    /** Set the viewport and commit it to history after a short delay. */
+    updateViewport(viewport: ViewportObject): void;
+  }
+
+  /** `grapher3d.viewportController`. */
+  interface Grapher3DViewportController {
+    getViewport(): Viewport;
+    /**
+     * Jump to a viewport. Invalid axes keep their current bounds, and each
+     * axis is clamped to a width between 1.34e-4 × its largest bound (at
+     * least 1.34e-4) and 134000, within ±67000.
+     */
+    setCurrentViewport(viewport: ViewportObject): void;
+  }
+
+  interface Grapher3D extends Generated.Grapher3D {
+    controls: Grapher3DControls;
+    viewportController: Grapher3DViewportController;
+    /** The 3D viewport always has z bounds (Desmos fills in defaults). */
+    getProjection(): { viewport: Viewport & { zmin: number; zmax: number } };
+    /**
+     * What's under the mouse, used as the center when zooming in with the
+     * scroll wheel. Undefined while the graph is spinning, or over nothing.
+     */
+    getZoomScrollWheelPickResult(): PickResult3D | null | undefined;
+  }
 
   interface Evaluator extends Generated.Evaluator {}
 

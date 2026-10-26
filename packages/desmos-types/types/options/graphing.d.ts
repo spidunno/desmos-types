@@ -266,12 +266,182 @@ declare namespace Desmos {
      * @defaultValue a random 128-bit hex string
      */
     randomSeed?: string;
+    /**
+     * Turn on Complex Mode, so expressions can use complex numbers. Ignored
+     * (forced to `false`) when `allowComplex` is `false`, and turns off
+     * `degreeMode`.
+     * @defaultValue `false`
+     * @remarks Undocumented.
+     */
+    complex?: boolean;
+    /**
+     * Draw the grid, axes and numbers only in the first quadrant.
+     * @defaultValue `false`
+     * @remarks Undocumented.
+     */
+    restrictGridToFirstQuadrant?: boolean;
+    /**
+     * The "lock viewport" toggle in the graph settings, which stops the user
+     * from panning and zooming. Unlike `lockViewport`, it is part of the graph
+     * state.
+     * @defaultValue `false`
+     * @remarks Undocumented.
+     */
+    userLockedViewport?: boolean;
+  }
+
+  /**
+   * Configuration options the docs don't mention that still appear on
+   * `calculator.settings`.
+   *
+   * @remarks Undocumented: may change without notice.
+   */
+  interface UndocumentedGraphingCalculatorConfig {
+    /**
+     * Show the author features enabled by `authorFeatures`. With `false`, they
+     * stay available but hidden, as when an author previews the student view.
+     * @defaultValue `true`
+     */
+    authorMode?: boolean;
+    /** Allow the advanced styling options in the style menu. @defaultValue `false` */
+    advancedStyling?: boolean;
+    /** Allow defining functions, like `f(x)=x^2`. @defaultValue `true` */
+    functionDefinition?: boolean;
+    /** 3D: put the viewport controls on the left instead of the right. @defaultValue `false` */
+    leftAlign3dViewportControls?: boolean;
+    /** 3D: draw surfaces with their opacity. When `false`, surfaces are opaque. @defaultValue `false` */
+    translucentSurfaces?: boolean;
+    /** Show keyboard shortcuts in tooltips. @defaultValue `false` */
+    showKeyboardShortcutsInTooltips?: boolean;
+    /** Show a performance meter over the graph paper. @defaultValue `false` */
+    showPerformanceMeter?: boolean;
+  }
+
+  /**
+   * Options Desmos uses for its own products, debugging and embedding. They
+   * are accepted by the constructor and `updateSettings()` but never appear
+   * on `calculator.settings`.
+   *
+   * @remarks Undocumented: may change without notice.
+   */
+  interface InternalGraphingCalculatorOptions {
+    /**
+     * Which product the calculator behaves as. `Desmos.Geometry` and
+     * `Desmos.Calculator3D` set this themselves.
+     * @defaultValue `'graphing'`
+     */
+    product?: 'graphing' | 'geometry-calculator' | 'graphing-3d';
+    /** Show the Desmos branding on the graph paper. @defaultValue `true` */
+    branding?: boolean;
+    /** Only trace and show points of interest for the selected expression. @defaultValue `false` */
+    onlyTraceSelected?: boolean;
+    /** Ignore mouse and touch input on the graph paper. @defaultValue `false` */
+    disableMouseInteractions?: boolean;
+    /** Accepted, but not read anywhere in the v1.13 bundle. @defaultValue `false` */
+    nativeOnscreenKeypad?: boolean;
+    /** 3D: draw surfaces as wireframes. @defaultValue `false` */
+    wireframe?: boolean;
+    /** 3D: debug rendering that shows ray-casting cost as a heat map. @defaultValue `false` */
+    raycastHeatmap?: boolean;
+    /** 3D: debugging flag for surface cost estimates (shows them in the expression list). @defaultValue `false` */
+    ignoreCostEstimate?: boolean;
+    /** 3D: ray-cast without interval arithmetic (debugging). @defaultValue `false` */
+    raycastDisableIntervals?: boolean;
+    /**
+     * With `pasteGraphLink`, called with the state of a pasted graph link
+     * before it is imported. Call `done(null, state)` to import it (possibly
+     * modified), or `done(error)` to reject it.
+     * @defaultValue imports the state unchanged
+     */
+    pasteGraphLinkCallback?: (state: GraphState, done: (error: unknown, state?: GraphState) => void) => void;
+    /** Link the branding to desmos.com, where the graph can be edited. @defaultValue `false` */
+    editOnWeb?: boolean;
+    /** Desmos testing: post the cross-origin save test to the current origin. @defaultValue `false` */
+    crossOriginSaveTest?: boolean;
+    /** Make the graph paper and its objects reachable with Tab. @defaultValue `true` */
+    enableTabindex?: boolean;
+    /** Audio Trace: step through expressions in reverse order. @defaultValue `false` */
+    audioTraceReverseExpressions?: boolean;
+    /** Draw the graph paper with a transparent background. @defaultValue `false` */
+    transparentBackground?: boolean;
+    /** Stop animating while the calculator is scrolled out of view. @defaultValue `false` */
+    pauseWhenOffscreen?: boolean;
+    /** 3D: release the WebGL context while the calculator is out of view. @defaultValue `true` */
+    releaseContextWhenOffscreen?: boolean;
+    /** Geometry: hide the geometry toolbar and tools. @defaultValue `false` */
+    hideGeoUI?: boolean;
+    /** 3D: beta features, such as per-surface resolution and translucent surfaces. @defaultValue `false` */
+    beta3d?: boolean;
+    /** Allow strings (categorical data) in expressions. @defaultValue `false` */
+    categoricalData?: boolean;
+    /** Pause the evaluator while the user is zooming. @defaultValue `false` */
+    disableWorkerOnZoom?: boolean;
+    /** Cache rendered SVG images. @defaultValue `false` */
+    cacheRenderedSvgs?: boolean;
+    /** Graph hidden expressions too (the "ghost mode" checkbox in advanced settings). @defaultValue `false` */
+    ghostMode?: boolean;
+    /** Geometry: draw an arc on reflection previews. @defaultValue `false` */
+    reflectionArc?: boolean;
+    /** Log the evaluator's internal errors to the console. @defaultValue `false` */
+    logInternalErrors?: boolean;
+    /** Show the compiler debugging panel. @defaultValue `false` */
+    debugCompiler?: boolean;
+    /** Show each item's id in the expression list. @defaultValue `false` */
+    showIDs?: boolean;
+    /** Show the evaluator's progress on each item, with a legend. @defaultValue `false` */
+    debugProgressUpdates?: boolean;
+    /** Maximum depth of recursive function calls, from 1 to 1,000,000. @defaultValue the evaluator's built-in limit */
+    recursionDepthLimit?: number;
+    /** Never narrate coordinates to screen readers, except during Audio Trace. @defaultValue `false` */
+    reportPositionNone?: boolean;
+    /** The calculator is embedded in a Desmos notebook. @defaultValue `false` */
+    insideDesNotebook?: boolean;
+    /** The expression list is rendered outside the calculator (split panel). @defaultValue `false` */
+    expressionsExternal?: boolean;
+    /** 3D: show the orientation buttons. @defaultValue `true` */
+    orientationButtons?: boolean;
+    /** Accepted, but not read anywhere in the v1.13 bundle. */
+    debug3dRender?: unknown;
+    /** 3D: force this many depth-peeling layers for translucent surfaces. @defaultValue chosen from the scene */
+    debugPeelLayers?: number;
+    /** 3D: choose the number of depth-peeling layers from the scene. @defaultValue `true` */
+    adaptivePeeling?: boolean;
+    /** Accepted, but not read anywhere in the v1.13 bundle. */
+    debugPixelRatio?: unknown;
+    /** 3D: opacity (as LaTeX) given to new translucent surfaces. @defaultValue `'0.8'` */
+    translucentOpacity?: Latex;
+    /** 3D: samples per pixel for depth peeling. @defaultValue chosen from the device pixel ratio */
+    peelUpsample?: number;
+    /** 3D: render surfaces by ray casting. @defaultValue `false` */
+    rayCast?: boolean;
+  }
+
+  /**
+   * Old options that still work: the calculator logs a deprecation warning
+   * and sets the replacement.
+   */
+  interface DeprecatedGraphingCalculatorOptions {
+    /** @deprecated Use `settingsMenu` and `expressionsTopbar`, which this sets. */
+    menus?: boolean;
+    /** @deprecated Use `pointsOfInterest`, which this sets. */
+    solutions?: boolean;
+    /** @deprecated Removed in API v1.0; ignored. */
+    singleVariableSolutions?: boolean;
+    /** @deprecated Use `actions`; `true` sets `actions: true`. */
+    clickableObjects?: boolean;
+    /** @deprecated Use `authorFeatures`, which this sets. */
+    administerSecretFolders?: boolean;
   }
 
   type AxisScale = 'linear' | 'logarithmic';
 
   /** Everything that can be passed to the `GraphingCalculator` constructor or `updateSettings()`. */
-  interface GraphingCalculatorOptions extends GraphingCalculatorConfig, GraphSettings {}
+  interface GraphingCalculatorOptions
+    extends GraphingCalculatorConfig,
+      GraphSettings,
+      UndocumentedGraphingCalculatorConfig,
+      InternalGraphingCalculatorOptions,
+      DeprecatedGraphingCalculatorOptions {}
 
   /** Options for `Desmos.Geometry`. Any graphing calculator option is accepted. */
   type GeometryOptions = GraphingCalculatorOptions;
@@ -284,37 +454,18 @@ declare namespace Desmos {
     | 'substitutions'
     | 'regressionTemplates'
     | 'intervalComprehensions'
-    | 'recursion';
+    | 'recursion'
+    | keyof InternalGraphingCalculatorOptions
+    | keyof DeprecatedGraphingCalculatorOptions;
 
-  /**
-   * Settings present on `calculator.settings` at runtime that the docs don't
-   * mention. They are read-only here because their behavior when set is not
-   * part of the public API.
-   *
-   * @remarks Undocumented: may change without notice.
-   */
-  interface UndocumentedGraphingSettings {
-    /** Whether Complex Mode is currently on. */
-    readonly complex: boolean;
-    readonly functionDefinition: boolean;
-    readonly restrictGridToFirstQuadrant: boolean;
-    readonly userLockedViewport: boolean;
-    readonly authorMode: boolean;
-    readonly advancedStyling: boolean;
-    readonly leftAlign3dViewportControls: boolean;
-    readonly translucentSurfaces: boolean;
-    readonly showKeyboardShortcutsInTooltips: boolean;
-    readonly showPerformanceMeter: boolean;
-  }
-
-  /** The current value of every documented option and graph setting. */
+  /** The current value of every option and graph setting that appears on `calculator.settings`. */
   type GraphingCalculatorSettingsValues = {
     readonly [K in Exclude<keyof GraphingCalculatorOptions, WriteOnlyGraphingOption | 'graphDescription'>]-?: NonNullable<
       GraphingCalculatorOptions[K]
     >;
   } & {
     readonly graphDescription: string | undefined;
-  } & UndocumentedGraphingSettings;
+  };
 
   /**
    * `calculator.settings`: the current settings, observable per property.

@@ -287,6 +287,55 @@ const [, , , tooMany] = (circle as Desmos.Internals.CircleBranch).segments[0];
 // @ts-expect-error `segments` meaning differs by mode, so it must be narrowed first
 const unnarrowed: number[] = g2d.graphSketches.x.branches[0].segments[0];
 
+// --- Grapher2D: projection, viewport, settings -------------------------------
+
+const projection = g2d.getProjection();
+const px: Desmos.Internals.Point = projection.map_pt({ x: 1, y: 2 });
+const math: Desmos.Internals.Point = projection.reverse_map_pt(px);
+const pixelsPerUnit: number = projection.mathToPixels.dangerouslyGetXScaleFactor();
+const { width: screenWidth } = projection.screen;
+const viewport: Desmos.Internals.ViewportObject = g2d.getCurrentViewport();
+if (projection.viewport.isSquare(projection.screen, g2d.settings)) console.log(projection.viewport.largestR());
+g2d.viewportController.animateToViewport({ xmin: -5, xmax: 5, ymin: -5, ymax: 5 });
+g2d.viewportController.setCurrentViewport({ ...viewport, xmax: viewport.xmax * 2 });
+g2d.viewportController.zoom('square');
+const latexBounds: string = g2d.viewportController.getCurrentViewportLatex().xmin;
+
+const settings = g2d.settings;
+settings.observe('showGrid.myMod', (name, owner) => {
+  const show: boolean = owner.showGrid;
+  const changed: 'showGrid' | (string & {}) = name;
+});
+settings.observe('xAxisLabel yAxisLabel', () => {});
+settings.unobserve('.myMod');
+settings.setProperty('xAxisArrowMode', 'BOTH');
+const labelSize: number = settings.getProperty('labelSize');
+const background: string = settings.getBackgroundColor();
+const configLang: string | undefined = settings.config.language;
+
+g2d.events.observeEvent('redraw.myMod', (_event, ms) => console.log(ms.toFixed(1)));
+for (const layer of g2d.getDrawLayers()) {
+  const where: -1 | 0 | 1 = layer.layer;
+  if (layer.drawSet.has('a')) console.log(layer.drawOrder.indexOf('a'));
+}
+const drawContext = g2d.createDrawContext();
+if (drawContext) drawContext.ctx.fillRect(drawContext.projection.mapx(0), 0, 1, 1);
+const background2: Desmos.Internals.ImageModel | undefined = g2d.getGraphImage('img');
+g2d.notifyAfterRedraw(() => {});
+g2d.setLayerClass('myMod', 'my-mod-cursor');
+
+// @ts-expect-error showGrid is a boolean
+settings.setProperty('showGrid', 'yes');
+
+// @ts-expect-error unknown setting
+settings.observe('showGrdi', () => {});
+
+// @ts-expect-error not a zoom kind
+g2d.viewportController.zoom('sideways');
+
+// @ts-expect-error points are objects, not tuples
+projection.map_pt([1, 2]);
+
 // --- Errors ----------------------------------------------------------------
 
 // @ts-expect-error unknown action type

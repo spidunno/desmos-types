@@ -6,11 +6,11 @@ the graphing calculator, geometry tool, 3D calculator, and the four-function and
 ## Install
 
 ```sh
-npm install --save-dev @spidunno/desmos-types@~1.13.3
+npm install --save-dev @spidunno/desmos-types@~1.13.7
 ```
 
 The package's major and minor version match the Desmos API version it describes; patch releases
-are fixes to the types. Use a tilde range (`~1.13.3`), not npm's default caret (`^`), so you only
+are fixes to the types. Use a tilde range (`~1.13.7`), not npm's default caret (`^`), so you only
 get type fixes for the API version you load.
 
 ## Usage
@@ -53,6 +53,30 @@ the API only exists as the global that `calculator.js` creates.
 import type { GraphingCalculator, GraphState } from '@spidunno/desmos-types';
 ```
 
+### Without a global
+
+Importing from `@spidunno/desmos-types` (or `/internals`) still declares the global `Desmos`, so
+code that uses the global type-checks even when the program never loaded `calculator.js` as a
+script. If you load the API some other way, for example into a scope of your own so that
+`window.Desmos` never exists, use the module-only entry points instead. They declare the same
+types, but nothing global:
+
+```ts
+import type { Desmos } from '@spidunno/desmos-types/module'; // or '/module/internals'
+
+async function loadDesmos(): Promise<typeof Desmos> {
+  /* ... */
+}
+
+const api = await loadDesmos();
+const calculator: Desmos.GraphingCalculator = api.GraphingCalculator(element);
+```
+
+`Desmos` is a type-only export, since the package contains no JavaScript: using it as a value is a
+compile error, and editors auto-import it with `import type` (or with a plain import that
+TypeScript removes, unless `verbatimModuleSyntax` is on). Don't also include the default entry
+points (in `compilerOptions.types` or a `/// <reference>`), or the global comes back.
+
 ## Layout
 
 | File | Contents |
@@ -75,6 +99,7 @@ import type { GraphingCalculator, GraphState } from '@spidunno/desmos-types';
 | `types/mathquill.d.ts` | The bundled MathQuill fork |
 | `types/desmos.d.ts` | `enabledFeatures`, `supportedLanguages`, `imageFileToDataURL`, `version`, `Window.Desmos` |
 | `internals/` | Opt-in internals (see [Internals](#internals)); `internals/generated/` is generated |
+| `module/` | Module-only copies of `index.d.ts` and `internals/index.d.ts` (see [Without a global](#without-a-global)), built by `npm run build:module` |
 | `scripts/extract-internals.cjs` | Regenerates `internals/generated/` from a bundle |
 
 ## Sources and conventions
@@ -99,7 +124,8 @@ members are typed separately (see [Internals](#internals)). `Desmos.TestInternal
 - `Desmos.Colors.GREEN` is `#348543`, not the documented `#388c46`. The palette still cycles through `#388c46` for new items.
 - `asyncScreenshot()` without a `mode` uses `'preserveX'` when the axes are square and `'stretch'` otherwise, not the documented `'contain'`.
 - On `Calculator3D`, `asyncScreenshot()` always throws, and `mathToPixels` / `pixelsToMath` are `undefined`. The types leave all three out.
-- `substitutions`, `regressionTemplates`, `intervalComprehensions` and `recursion` are accepted as options but never appear on `calculator.settings`.
+- The calculator accepts many options the docs don't mention, such as `complex`, `restrictGridToFirstQuadrant` and `advancedStyling`. All of them are typed (as `UndocumentedGraphingCalculatorConfig`, `InternalGraphingCalculatorOptions` and the undocumented members of `GraphSettings`), along with the deprecated aliases (`menus`, `solutions`, ...), which are marked `@deprecated`.
+- `substitutions`, `regressionTemplates`, `intervalComprehensions`, `recursion` and the internal and deprecated options are accepted but never appear on `calculator.settings`.
 - `setMathBounds()` also accepts `{ xmin, xmax, ymin, ymax }`, plus `zmin` / `zmax` on 3D.
 
 ## Internals
@@ -134,16 +160,28 @@ Everything here is internal to Desmos and changes between builds, even within v1
 
 | Layer | Files | Source |
 | --- | --- | --- |
-| Generated | `internals/generated/objects.d.ts` | The bundle loaded in jsdom; 58 internal objects walked |
+| Generated | `internals/generated/objects.d.ts` | The bundle loaded in jsdom; 60 internal objects walked |
 | Generated | `internals/generated/actions.d.ts` | Every `dispatch({ type })` call site and `switch (action.type)` reducer, found with acorn. Each of the 341 actions is attributed to the reducer(s) that handle it, giving three unions: `Action` (graph controller), `MathFieldAction` and `BasicCalculatorAction` |
 | Generated | `internals/generated/views.d.ts` | Props and instance members of the 13 `Private.Fragile` views, from live instances (about 1,400 views rendered), call sites and prop reads, following `{...props}` forwarding into inner views |
 | Hand-written | `internals/*.d.ts` | Precise types for the parts mods use, checked against the bundle source |
 
 In the generated layer, property types come from observed values. A method's return type comes from
-static analysis of its source (nothing returned → `void`, only booleans returned → `boolean`), or from
-calling side-effect-free getters such as `get*` and `is*`. Anything that couldn't be determined is
-`unknown`, and parameters are `unknown` because the bundle is minified. Action payload field names are
-reliable, but their value types are often inferred from the field name.
+calling side-effect-free getters such as `get*` and `is*`, or from what its source returns: literals,
+operators, object literals, `this.x` (typed as `this["x"]`, so refinements of `x` carry over), and
+calls to other methods and bundle functions, whose return types are inferred the same way. A return
+type stays `unknown` if any returned value can't be typed. Anything that couldn't be determined is
+`unknown`. Action payload field names are reliable, but their value types are often inferred from the
+field name.
+
+The bundle is minified, so parameter names are recovered from how each method uses them:
+`this.x = p` and `{ x: p }` name it `x`, `dispatch({ type, x: p })` also copies the action field's
+type, and passing `p` to another method or bundle function (`this.getItemModel(p)`) reuses that
+function's inferred name and type. Defaults, arithmetic, exhaustive `switch`es and `.type`
+comparisons give types (`id: string`, `index: number`, `'selected' | 'tentatively-selected'`, item
+models). A parameter is optional if it has a default, is checked against `undefined`, or some call
+in the bundle leaves it out. What can't be recovered stays `argN: unknown`. A property is optional if it
+held `undefined` or was added after the calculator loaded (for example, by the first animation frame
+or a UI interaction).
 
 The hand-written interfaces *extend* the generated ones (`Internals.Controller extends
 Generated.Controller`, and so on). TypeScript therefore checks every hand-written type against what
@@ -166,6 +204,10 @@ What's hand-typed:
   interest (`POI`, `POITypes`), sketch labels, movable points and the grapher's sketch methods.
   A fixture of 60 real sketches (`test/fixtures/graph-sketches.ts`) is type-checked against
   these types.
+- **The rest of `grapher2d`:** the projection (math ↔ pixel conversion, with linear and log axes),
+  `Viewport`, the viewport controller (jump, animate, zoom, pan), `GrapherSettings` (every graph
+  and drawing setting, with typed `observe` / `getProperty` / `setProperty`), the `'redraw'`
+  event, draw layers, graph images, screenshots and grapher state.
 - **Dispatcher:** `register`, `unregister`, `waitFor`, generic over the action type.
 - **Other controllers:** each math field (`mathField.controller`) and each basic calculator
   (`calculator.controller`) has its own controller and dispatcher. Keystrokes in a math field are
@@ -290,6 +332,39 @@ sketches['1']?.getPOI().filter((poi) => poi.type === 1004).map((poi) => [poi.x, 
 // Draggable points, with table row info for table columns
 sketches['1']?.getMovablePoints().map((p) => ({ x: p.x, y: p.y, row: p.tableInfo?.rowIndex }));
 ```
+
+### Projection, viewport and settings
+
+`grapher2d.getProjection()` converts between math coordinates and pixels (CSS pixels from the
+graph paper's top-left, y down). The projection is replaced whenever you pan, zoom or resize, so
+get a fresh one each time instead of keeping it.
+
+```js
+const g = Calc.controller.grapher2d;
+
+// Math ↔ pixels
+const p = g.getProjection();
+p.map_pt({ x: 0, y: 0 });              // where the origin is on screen
+p.reverse_map_pt({ x: 100, y: 100 });  // the math point under pixel (100, 100)
+p.mathToPixels.dangerouslyGetXScaleFactor(); // pixels per unit (throws on a log axis)
+
+// The viewport
+g.getCurrentViewport(); // { xmin, xmax, ymin, ymax }
+g.viewportController.animateToViewport({ xmin: -5, xmax: 5, ymin: -5, ymax: 5 });
+g.viewportController.zoom('in'); // 'in' | 'out' | 'square' | 'default'
+
+// Settings: graph settings plus drawing settings like labelSize and graphLineWidth
+g.settings.observe('showGrid.myMod', (name, settings) => console.log(name, settings.showGrid));
+g.settings.setProperty('showGrid', false);
+g.settings.unobserve('.myMod'); // remove every observer in the myMod namespace
+
+// Run code after each redraw (the callback gets the redraw time in ms)
+g.events.observeEvent('redraw.myMod', (event, ms) => console.log(`redrew in ${ms}ms`));
+g.events.unobserveEvent('.myMod');
+```
+
+Moving the viewport this way doesn't add an undo step. Call
+`g.debounceUserRequestedViewportChange()` afterwards if you want one.
 
 ### Regenerating for a new bundle
 

@@ -168,6 +168,17 @@ declare namespace Desmos.Internals {
 
   type FragileViewClass<P, Members> = DCGView.ViewClass<P, FragileView<P, Members>>;
 
+  /** Static helpers on `Fragile.MathquillView`. */
+  interface MathquillViewStatics {
+    /** The math field containing `document.activeElement`, if it's in one. */
+    getFocusedMathquill(): Desmos.MathQuillMathField | undefined;
+    /**
+     * Apply an arrow key to a math field. Returns true if the cursor was
+     * already at that edge (so focus should move to the next item).
+     */
+    applyArrowKeyAndReturnIfWasAtBounds(mathField: Desmos.MathQuillMathField, key: string, event: KeyboardEvent): boolean;
+  }
+
   /** The view classes on `Private.Fragile`. */
   interface FragileViews {
     ExpressionView: FragileViewClass<ExpressionViewProps, Generated.ExpressionViewMembers>;
@@ -176,7 +187,7 @@ declare namespace Desmos.Internals {
     ExpressionOptionsMenuView: FragileViewClass<ExpressionOptionsMenuViewProps, Generated.ExpressionOptionsMenuViewMembers>;
     ImageIconView: FragileViewClass<ImageIconViewProps, Generated.ImageIconViewMembers>;
     PromptSliderView: FragileViewClass<PromptSliderViewProps, Generated.PromptSliderViewMembers>;
-    MathquillView: FragileViewClass<MathquillViewProps, Generated.MathquillViewMembers>;
+    MathquillView: FragileViewClass<MathquillViewProps, Generated.MathquillViewMembers> & MathquillViewStatics;
     InlineMathInputView: FragileViewClass<InlineMathInputViewProps, Generated.InlineMathInputViewMembers>;
     StaticMathquillView: FragileViewClass<StaticMathquillViewProps, Generated.StaticMathquillViewMembers>;
     Checkbox: FragileViewClass<CheckboxProps, Generated.CheckboxMembers>;

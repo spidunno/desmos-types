@@ -1,6 +1,6 @@
 {
   "name": "@spidunno/desmos-types",
-  "version": "1.13.3",
+  "version": "1.13.7",
   "description": "TypeScript type definitions for the Desmos API v1.13",
   "types": "index.d.ts",
   "publishConfig": {
@@ -12,15 +12,24 @@
     },
     "./internals": {
       "types": "./internals/index.d.ts"
+    },
+    "./module": {
+      "types": "./module/index.d.ts"
+    },
+    "./module/internals": {
+      "types": "./module/internals.d.ts"
     }
   },
   "files": [
     "index.d.ts",
     "types/**/*.d.ts",
-    "internals/**/*.d.ts"
+    "internals/**/*.d.ts",
+    "module/*.d.ts"
   ],
   "scripts": {
-    "test": "tsc -p tsconfig.json && tsc -p tsconfig.internals.json",
+    "test": "npm run build:module && tsc -p tsconfig.json && tsc -p tsconfig.internals.json && tsc -p tsconfig.module.json",
+    "build:module": "node scripts/build-module-types.cjs",
+    "prepack": "npm run build:module",
     "generate:internals": "node scripts/extract-internals.cjs",
     "snapshot:sketches": "node scripts/snapshot-sketches.cjs"
   },

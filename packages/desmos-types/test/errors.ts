@@ -70,3 +70,9 @@ Desmos.Abraham.latexToUeb('x', { strict: true });
 
 // @ts-expect-error enum constants are read-only
 Desmos.Styles.SOLID = 'DASHED';
+
+// @ts-expect-error internal options never appear on calculator.settings
+Desmos.GraphingCalculator(document.body).settings.transparentBackground;
+
+// @ts-expect-error not a product
+Desmos.GraphingCalculator(document.body, { product: 'scientific' });

@@ -3,9 +3,14 @@
  * selection state.
  */
 declare namespace Desmos.Internals {
-  /** One draw layer: item ids in paint order. */
+  /**
+   * One pass of drawing. Layer `-1` holds background images (drawn under the
+   * grid), `0` everything else, and `1` folders marked "in front of
+   * everything". Layers -1 and 1 only exist when non-empty.
+   */
   interface DrawLayer {
-    layer: number;
+    layer: -1 | 0 | 1;
+    /** Item ids (table column ids for tables) in paint order, back to front. */
     drawOrder: ExpressionId[];
     drawSet: Set<ExpressionId>;
   }

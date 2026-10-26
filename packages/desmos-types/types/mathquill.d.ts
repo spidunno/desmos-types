@@ -52,7 +52,7 @@ declare namespace Desmos {
     /** Set global MathQuill configuration. */
     config(config: MathQuillConfig): void;
     /** The MathQuill API instance attached to `element`, if any. */
-    getApiInstanceForElement(element: HTMLElement): MathQuillStaticMath | MathQuillMathField | null | undefined;
+    getApiInstanceForElement(element: Element): MathQuillStaticMath | MathQuillMathField | null | undefined;
   }
 
   /** @remarks Undocumented: may change without notice. */
