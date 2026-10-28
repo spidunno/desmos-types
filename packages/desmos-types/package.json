@@ -1,6 +1,6 @@
 {
   "name": "@spidunno/desmos-types",
-  "version": "1.13.15",
+  "version": "1.13.16",
   "description": "TypeScript type definitions for the Desmos API v1.13",
   "types": "index.d.ts",
   "publishConfig": {
@@ -54,6 +54,6 @@
   },
   "desmos": {
     "version": "v1.13-prerelease",
-    "commit": "473689ef27aa526cc2568d69a5a3529ca90910cf"
+    "commit": "38adf974b7e0e76ee18b0294ceae30c23ae44dd4"
   }
 }
