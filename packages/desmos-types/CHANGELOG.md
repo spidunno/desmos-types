@@ -2,6 +2,14 @@
 
 Each version records the Desmos commit its internal types were generated from.
 
+## 1.13.18 (2026-10-28)
+
+Regenerated for Desmos v1.13-prerelease, commit `e0922bf70df9e4a8ec15cc7b8954592bd7ae3ed8`.
+
+### Members with a different type (1)
+
+- `Evaluator.readEvaluatorConfig`
+
 ## 1.13.17 (2026-10-28)
 
 Regenerated for Desmos v1.13-prerelease, commit `b42d1e6fcc7c913494edbb54e29e4902e27498be`.
