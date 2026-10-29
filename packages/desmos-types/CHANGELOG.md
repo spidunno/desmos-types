@@ -2,6 +2,27 @@
 
 Each version records the Desmos commit its internal types were generated from.
 
+## 1.13.20 (2026-10-29)
+
+Regenerated for Desmos v1.13-prerelease, commit `a47de559ae5f033908f76884ffd32620b48c9caa`.
+
+### Members removed (14)
+
+- `ControllerGeoModel.applyTransformation`
+- `ControllerGeoModel.areAnyObjectsHovered`
+- `ControllerGeoModel.deleteSelectedObjects`
+- `ControllerGeoModel.getAdditionalTools`
+- `ControllerGeoModel.getEnabledAdditionalTools`
+- `ControllerGeoModel.getSelectedObjectIdsSorted`
+- `ControllerGeoModel.getSelectedObjectIdsUnsorted`
+- `ControllerGeoModel.getSelectionBox`
+- `ControllerGeoModel.isAnyAdditionalToolEnabled`
+- `ControllerGeoModel.isCreatingNewTransform`
+- `ControllerGeoModel.isCurrentToolComplex`
+- `ControllerGeoModel.isObjectSelected`
+- `ControllerGeoModel.setObjectSelected`
+- `ControllerGeoModel.setObjectsSelected`
+
 ## 1.13.19 (2026-10-29)
 
 Regenerated for Desmos v1.13-prerelease, commit `185c615c7d09fb32978e5760ffe05e565c8c6181`.
