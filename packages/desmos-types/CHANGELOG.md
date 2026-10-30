@@ -2,6 +2,16 @@
 
 Each version records the Desmos commit its internal types were generated from.
 
+## 1.13.22 (2026-10-30)
+
+Regenerated for Desmos v1.13-prerelease, commit `976de55bb824144d25723d9e16d11e625dd8d3a2`.
+
+### Members added (3)
+
+- `Controller.areArrowsEnabled`
+- `BasicCalculatorController.hasAccentColor`
+- `ControllerGeoModel.createTools`
+
 ## 1.13.21 (2026-10-30)
 
 Regenerated for Desmos v1.13-prerelease, commit `f82f43220c7f1f5431e57e431ace564953009e6b`.
