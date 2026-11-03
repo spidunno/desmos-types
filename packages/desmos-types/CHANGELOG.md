@@ -2,6 +2,14 @@
 
 Each version records the Desmos commit its internal types were generated from.
 
+## 1.13.30 (2026-11-03)
+
+Regenerated for Desmos v1.13-prerelease, commit `22e2c3471120bfc9abd39305de79871f657e0c9a`.
+
+### Members with a different type (1)
+
+- `ControllerGeoModel.getOrCreatePointNearMouse`
+
 ## 1.13.29 (2026-11-03)
 
 Regenerated for Desmos v1.13-prerelease, commit `f77d74ed4c9997c357b80ee6a6f9a65902d520a3`.
