@@ -6,11 +6,11 @@ the graphing calculator, geometry tool, 3D calculator, and the four-function and
 ## Install
 
 ```sh
-npm install --save-dev @spidunno/desmos-types@~1.13.32
+npm install --save-dev @spidunno/desmos-types@~1.13.33
 ```
 
 The package's major and minor version match the Desmos API version it describes; patch releases
-are fixes to the types. Use a tilde range (`~1.13.32`), not npm's default caret (`^`), so you only
+are fixes to the types. Use a tilde range (`~1.13.33`), not npm's default caret (`^`), so you only
 get type fixes for the API version you load.
 
 ## Usage

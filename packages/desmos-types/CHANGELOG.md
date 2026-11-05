@@ -2,6 +2,15 @@
 
 Each version records the Desmos commit its internal types were generated from.
 
+## 1.13.33 (2026-11-05)
+
+Regenerated for Desmos v1.13-prerelease, commit `abb95b355a45a0ebab6617fa2705c0ddd0803377`.
+
+### Members removed (2)
+
+- `Controller.areArrowsEnabled`
+- `ControllerGeoModel.createTools`
+
 ## 1.13.32 (2026-11-04)
 
 Regenerated for Desmos v1.13-prerelease, commit `9b9d55b574465884ba593cd077e37d76670544f2`.
