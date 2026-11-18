@@ -2,6 +2,12 @@
 
 Each version records the Desmos commit its internal types were generated from.
 
+## 1.13.51 (2026-11-18)
+
+Regenerated for Desmos v1.13-prerelease, commit `ff6400ef9aa98a37563ef4014e1fa3b122ad9229`.
+
+No changes to the generated types.
+
 ## 1.13.50 (2026-11-18)
 
 Regenerated for Desmos v1.13-prerelease, commit `708cae05bc1791060d18ee355f4fb29e9ae090a9`.
