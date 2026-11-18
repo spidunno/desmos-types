@@ -2,6 +2,35 @@
 
 Each version records the Desmos commit its internal types were generated from.
 
+## 1.13.50 (2026-11-18)
+
+Regenerated for Desmos v1.13-prerelease, commit `708cae05bc1791060d18ee355f4fb29e9ae090a9`.
+
+### Members added (10)
+
+- `Controller.getColorMode`
+- `Controller.getCurveDisplayColor`
+- `Grapher2D.drawScreenshotToCanvas`
+- `Grapher2D.isColoredByExpression`
+- `GrapherSettings.getColorMode`
+- `GrapherSettings.getConfiguredThemeColors`
+- `GrapherSettings.getCurveDisplayColor`
+- `GrapherSettings.getThemeColors`
+- `GrapherSettings.isKeptLightByThemeColors`
+- `GrapherSettings.whileTakingScreenshot`
+
+### Members removed (3)
+
+- `GrapherSettings.getConfiguredAccentColor`
+- `GrapherSettings.getConfiguredBackgroundColor`
+- `GrapherSettings.getConfiguredTextColor`
+
+### Members with a different type (3)
+
+- `Grapher2D.screenshotToCanvas`
+- `Grapher2D.updateSketch`
+- `PrivateMathtools.colorHelpers`
+
 ## 1.13.49 (2026-11-17)
 
 Regenerated for Desmos v1.13-prerelease, commit `5301a3e6ba49ededbf2d90a1e8922cdc3fed85db`.
