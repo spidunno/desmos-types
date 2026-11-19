@@ -2,6 +2,14 @@
 
 Each version records the Desmos commit its internal types were generated from.
 
+## 1.13.54 (2026-11-19)
+
+Regenerated for Desmos v1.13-prerelease, commit `f6aa1eb3bae0e935f8f00d2574f474a660f8db17`.
+
+### Members with a different type (1)
+
+- `BasicCalculatorController.raw`
+
 ## 1.13.53 (2026-11-19)
 
 Regenerated for Desmos v1.13-prerelease, commit `bb2225aa11765dd2fa7df49e8f618eaf38b5aaa4`.
