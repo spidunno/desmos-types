@@ -2,6 +2,18 @@
 
 Each version records the Desmos commit its internal types were generated from.
 
+## 1.13.55 (2026-11-19)
+
+Regenerated for Desmos v1.13-prerelease, commit `10328ba0f54d274d4558ecc80096728068a11449`.
+
+### Members added (1)
+
+- `ControllerTokenController.getColorMode`
+
+### Members with a different type (1)
+
+- `PrivateMathtools.colorHelpers`
+
 ## 1.13.54 (2026-11-19)
 
 Regenerated for Desmos v1.13-prerelease, commit `f6aa1eb3bae0e935f8f00d2574f474a660f8db17`.
