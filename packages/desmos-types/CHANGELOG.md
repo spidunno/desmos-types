@@ -2,6 +2,22 @@
 
 Each version records the Desmos commit its internal types were generated from.
 
+## 1.13.56 (2026-11-20)
+
+Regenerated for Desmos v1.13-prerelease, commit `e1b566b8b1fecb3e2bd8c3279c6b6276ce8db5be`.
+
+### Members added (1)
+
+- `MathFieldController.selectedContentForCopy`
+
+### Members removed (1)
+
+- `MathFieldController.selectedLatex`
+
+### Actions added (1)
+
+- `MathFieldAction: "paste"`
+
 ## 1.13.55 (2026-11-19)
 
 Regenerated for Desmos v1.13-prerelease, commit `10328ba0f54d274d4558ecc80096728068a11449`.
