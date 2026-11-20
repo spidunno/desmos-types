@@ -2,6 +2,35 @@
 
 Each version records the Desmos commit its internal types were generated from.
 
+## 1.13.57 (2026-11-20)
+
+Regenerated for Desmos v1.13-prerelease, commit `ece5222f87957e953f9397883764b58020d3d8d9`.
+
+### Members added (14)
+
+- `Controller.imageStore`
+- `Controller.getImageStore`
+- `Controller.insertUploadedImage`
+- `ControllerImageStore.byKey`
+- `ControllerImageStore.onImageDataLoaded`
+- `ControllerImageStore.add`
+- `ControllerImageStore.anyLoading`
+- `ControllerImageStore.entries`
+- `ControllerImageStore.getImageData`
+- `ControllerImageStore.getSnapshot`
+- `ControllerImageStore.load`
+- `ControllerImageStore.restore`
+- `ControllerImageStore.serialize`
+- `ControllerImageStore.updateToState`
+
+### Members with a different type (5)
+
+- `Controller.getUndoRedoDiffState`
+- `Controller.getUndoRedoFullState`
+- `Evaluator.readEvaluatorConfig`
+- `Grapher2D.getImageData`
+- `Grapher3D.getImageData`
+
 ## 1.13.56 (2026-11-20)
 
 Regenerated for Desmos v1.13-prerelease, commit `e1b566b8b1fecb3e2bd8c3279c6b6276ce8db5be`.
