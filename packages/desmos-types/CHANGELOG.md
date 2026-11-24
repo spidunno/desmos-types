@@ -2,6 +2,29 @@
 
 Each version records the Desmos commit its internal types were generated from.
 
+## 1.13.60 (2026-11-24)
+
+Regenerated for Desmos v1.13-prerelease, commit `56395433c65c70555dbb91b7d20d804406ac42c7`.
+
+### Members added (6)
+
+- `Grapher2D.isSketchColoredByExpression`
+- `Grapher3D.sentColorMode`
+- `Grapher3D.darkModeBranches`
+- `Grapher3D.displayGraphDataChanges`
+- `Grapher3D.drawScreenshotToCanvas`
+- `Grapher3D.isSketchColoredByExpression`
+
+### Members removed (1)
+
+- `Grapher2D.isColoredByExpression`
+
+### Members with a different type (3)
+
+- `Controller.getNoteTypingShortcut`
+- `Grapher3D.getWorkerData`
+- `PrivateMathtools.colorHelpers`
+
 ## 1.13.59 (2026-11-24)
 
 Regenerated for Desmos v1.13-prerelease, commit `0de3e367b7c94d1fb87b551c70bbd0de63a50653`.
