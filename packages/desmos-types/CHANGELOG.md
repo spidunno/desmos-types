@@ -2,6 +2,16 @@
 
 Each version records the Desmos commit its internal types were generated from.
 
+## 1.13.59 (2026-11-24)
+
+Regenerated for Desmos v1.13-prerelease, commit `0de3e367b7c94d1fb87b551c70bbd0de63a50653`.
+
+### Members with a different type (3)
+
+- `ControllerImageStore.onImageDataLoaded`
+- `ControllerImageStore.add`
+- `ControllerImageStore.load`
+
 ## 1.13.58 (2026-11-24)
 
 Regenerated for Desmos v1.13-prerelease, commit `097ed87d2ac0aa33b521685832dbbeb9e849ba66`.
