@@ -2,6 +2,26 @@
 
 Each version records the Desmos commit its internal types were generated from.
 
+## 1.13.58 (2026-11-24)
+
+Regenerated for Desmos v1.13-prerelease, commit `097ed87d2ac0aa33b521685832dbbeb9e849ba66`.
+
+### Members added (4)
+
+- `Controller.legacyVectorUpdate`
+- `Controller.getLegacyVectorMode`
+- `Controller.isKeypadActivated`
+- `GrapherSettings.legacyVectorMode`
+
+### Members with a different type (1)
+
+- `Evaluator.readEvaluatorConfig`
+
+### Actions added (2)
+
+- `Action: "apply-legacy-vector-update"`
+- `Action: "update-legacy-vector-behavior"`
+
 ## 1.13.57 (2026-11-20)
 
 Regenerated for Desmos v1.13-prerelease, commit `ece5222f87957e953f9397883764b58020d3d8d9`.
